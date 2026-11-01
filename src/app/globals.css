@@ -1,0 +1,329 @@
+@import "maplibre-gl/dist/maplibre-gl.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* MapLibre WebGL Canvas & Marker Projection Safeguards */
+.maplibregl-map {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.maplibregl-canvas-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.maplibregl-marker {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  will-change: transform;
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   NEXTRAK INDIAN LOGISTICS OS — DUAL-THEME ARCHITECTURE
+   1. Telemetry Dark (Default)
+   2. Enterprise High-Trust Light
+   ========================================================================== */
+
+:root,
+[data-theme="telemetry-dark"],
+.dark {
+  /* Canvas & Background */
+  --canvas-bg: #080E1B;
+  --canvas-pattern: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  --canvas-pattern-size: 40px 40px;
+  --canvas-glow: radial-gradient(circle at 50% 0%, rgba(0, 212, 255, 0.12) 0%, transparent 65%);
+  
+  --bg-primary: #080E1B;
+  --bg-surface: #101A2B;
+  --bg-surface-elevated: #142238;
+  --bg-hover: #1A2B47;
+
+  /* Tactical Dark Navy Palette (RGB channels for Tailwind opacity modifiers) */
+  --navy-950: #080E1B;
+  --navy-950-rgb: 8 14 27;
+  --navy-900: #101A2B;
+  --navy-900-rgb: 16 26 43;
+  --navy-850: #142238;
+  --navy-850-rgb: 20 34 56;
+  --navy-800: #1A2B47;
+  --navy-800-rgb: 26 43 71;
+  --navy-700: #22375A;
+  --navy-700-rgb: 34 55 90;
+  --navy-600: #2D4773;
+  --navy-600-rgb: 45 71 115;
+
+  /* Glassmorphism & Cards */
+  --card-bg: rgba(20, 34, 56, 0.75);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-border-glow: rgba(0, 212, 255, 0.3);
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+  /* Typography */
+  --text-primary: #F4F7FC;
+  --text-secondary: #9AAAC0;
+  --text-muted: #60728C;
+
+  /* Tactical Accents */
+  --accent-primary: #00D4FF;
+  --accent-primary-rgb: 0 212 255;
+  --accent-secondary: #6C63FF;
+  --accent-glow: rgba(0, 212, 255, 0.25);
+  --accent-muted: rgba(0, 212, 255, 0.12);
+
+  --accent-cyan: #00F2FE;
+  --accent-orange: #FF6B00;
+  --accent-emerald: #10B981;
+  --accent-blue: #2563EB;
+  --accent-amber: #F59E0B;
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(0, 212, 255, 0.3);
+
+  /* Navigation & Panels */
+  --nav-bg: rgba(8, 14, 27, 0.88);
+  --sidebar-bg: #080E1B;
+  --inner-bg: rgba(16, 26, 43, 0.85);
+  --popover-bg: #101A2B;
+}
+
+[data-theme="enterprise-light"],
+[data-theme="light"],
+.light {
+  /* Canvas & Background */
+  --canvas-bg: #F8FAFC;
+  --canvas-pattern: radial-gradient(#CBD5E1 1px, transparent 1px);
+  --canvas-pattern-size: 24px 24px;
+  --canvas-glow: radial-gradient(circle at 50% 0%, rgba(2, 132, 199, 0.08) 0%, transparent 65%);
+  
+  --bg-primary: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #F1F5F9;
+  --bg-hover: #E2E8F0;
+
+  /* Enterprise Light Slate Hierarchy (RGB channels for Tailwind opacity modifiers) */
+  --navy-950: #FFFFFF;
+  --navy-950-rgb: 255 255 255;
+  --navy-900: #F1F5F9;
+  --navy-900-rgb: 241 245 249;
+  --navy-850: #E2E8F0;
+  --navy-850-rgb: 226 232 240;
+  --navy-800: #CBD5E1;
+  --navy-800-rgb: 203 213 225;
+  --navy-700: #94A3B8;
+  --navy-700-rgb: 148 163 184;
+  --navy-600: #64748B;
+  --navy-600-rgb: 100 116 139;
+
+  /* Glassmorphism & Cards */
+  --card-bg: #FFFFFF;
+  --card-border: #E2E8F0;
+  --card-border-glow: rgba(2, 132, 199, 0.35);
+  --card-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+
+  /* Typography - Strict WCAG AAA High Contrast */
+  --text-primary: #0F172A; /* Slate-900: 15.8:1 contrast on #F8FAFC */
+  --text-secondary: #334155; /* Slate-700: 9.5:1 contrast */
+  --text-muted: #64748B; /* Slate-500: 4.8:1 contrast */
+
+  /* High-Trust Accents */
+  --accent-primary: #0284C7; /* Sky-600: High-trust blue */
+  --accent-primary-rgb: 2 132 199;
+  --accent-secondary: #0D9488; /* Teal-600 */
+  --accent-glow: rgba(2, 132, 199, 0.15);
+  --accent-muted: rgba(2, 132, 199, 0.10);
+
+  --accent-cyan: #0284C7;
+  --accent-orange: #EA580C;
+  --accent-emerald: #059669;
+  --accent-blue: #1D4ED8;
+  --accent-amber: #D97706;
+
+  /* Borders */
+  --border-subtle: #E2E8F0;
+  --border-active: #94A3B8;
+
+  /* Navigation & Panels */
+  --nav-bg: rgba(255, 255, 255, 0.92);
+  --sidebar-bg: #FFFFFF;
+  --inner-bg: #F8FAFC;
+  --popover-bg: #FFFFFF;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--canvas-bg);
+  background-image: var(--canvas-glow), var(--canvas-pattern);
+  background-size: 100% 100%, var(--canvas-pattern-size);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Glassmorphism panels */
+.glass-panel {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.glass-panel-glow {
+  background: var(--card-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--card-border-glow);
+  box-shadow: var(--card-shadow);
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+/* Glowing accents */
+.glow-cyan {
+  box-shadow: 0 0 25px rgba(0, 242, 254, 0.3);
+}
+
+.glow-orange {
+  box-shadow: 0 0 25px rgba(255, 107, 0, 0.3);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.3);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #00F2FE 0%, #2563EB 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="enterprise-light"] .text-gradient,
+[data-theme="light"] .text-gradient,
+.light .text-gradient {
+  background: linear-gradient(135deg, #0284C7 0%, #1D4ED8 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.text-gradient-orange {
+  background: linear-gradient(135deg, #FF6B00 0%, #FFB547 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="enterprise-light"] .text-gradient-orange,
+[data-theme="light"] .text-gradient-orange,
+.light .text-gradient-orange {
+  background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Light Mode High-Contrast Enforcement Overrides */
+[data-theme="enterprise-light"] .text-navy-950,
+[data-theme="light"] .text-navy-950,
+.light .text-navy-950 {
+  color: #FFFFFF !important;
+}
+
+[data-theme="enterprise-light"] .shadow-glow,
+[data-theme="light"] .shadow-glow,
+.light .shadow-glow {
+  box-shadow: 0 0 16px rgba(2, 132, 199, 0.18) !important;
+}
+
+[data-theme="enterprise-light"] .glass-panel,
+[data-theme="light"] .glass-panel,
+.light .glass-panel {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="enterprise-light"] .glass-panel-glow,
+[data-theme="light"] .glass-panel-glow,
+.light .glass-panel-glow {
+  background: #FFFFFF;
+  border-color: rgba(2, 132, 199, 0.4);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--canvas-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #22375A;
+  border-radius: 4px;
+}
+
+[data-theme="enterprise-light"] ::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-cyan);
+}
+
+/* Mapbox Popup Overrides */
+.mapboxgl-popup-content {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--card-border-glow) !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  box-shadow: var(--card-shadow) !important;
+}
+
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip {
+  border-bottom-color: var(--card-bg) !important;
+}
+
+/* ==========================================================================
+   CARTOGRAPHIC LOD & TWO-TIER MARKER ENGINE (iamaware.in/map standard)
+   ========================================================================== */
+.marker-badge {
+  background: rgba(11, 18, 32, 0.92) !important;
+  color: #FFFFFF !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65) !important;
+}
+
+/* Continental Overview (zoom < 5.5): Hide secondary badges to prevent collisions */
+.zoom-continental .marker-secondary .marker-badge {
+  display: none !important;
+}
+
+.zoom-continental .marker-secondary:hover .marker-badge {
+  display: flex !important;
+}
+
+.zoom-continental .marker-secondary .animate-ping {
+  opacity: 0.35 !important;
+}
+
+/* Ensure MapLibre marker anchors do not drift */
+.nextrak-marker-anchor {
+  will-change: transform;
+}

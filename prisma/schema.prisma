@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  passwordHash  String
+  role          String         @default("CUSTOMER") // SUPER_ADMIN, ADMIN, DISPATCHER, FLEET_MANAGER, DRIVER, CUSTOMER
+  avatar        String?
+  company       String?
+  phone         String?
+  authProvider  String         @default("CREDENTIALS") // GOOGLE, CREDENTIALS
+  metadata      String?        // JSON string storing role-specific onboarding fields
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  shipmentsSent Shipment[]     @relation("SenderShipments")
+  shipmentsRecv Shipment[]     @relation("RecipientShipments")
+  notifications Notification[]
+  auditLogs     AuditLog[]
+}
+
+model Shipment {
+  id                     String          @id @default(cuid())
+  trackingNumber         String          @unique
+  externalTrackingNumber String?
+  carrier                String          // FedEx, UPS, DHL, AfterShip, Internal
+  serviceType            String          @default("Express Standard") // Priority Overnight, Express Standard, Ground Freight
+  currentStatus          String          @default("CREATED") // CREATED, CONFIRMED, PICKED_UP, ORIGIN_FACILITY, IN_TRANSIT, DESTINATION_FACILITY, OUT_FOR_DELIVERY, DELIVERED, DELAYED, EXCEPTION, FAILED, RETURNED, CANCELLED
+  sourceType             String          @default("SYSTEM_DEMO") // CARRIER_FEED, TELEMATICS_GPS, SYSTEM_DEMO
+  
+  senderId               String?
+  sender                 User?           @relation("SenderShipments", fields: [senderId], references: [id])
+  senderName             String
+  senderAddress          String
+  senderCity             String
+  senderCountry          String          @default("United States")
+  
+  recipientId            String?
+  recipient              User?           @relation("RecipientShipments", fields: [recipientId], references: [id])
+  recipientName          String
+  recipientAddress       String
+  recipientCity          String
+  recipientCountry       String          @default("United States")
+  
+  originCity             String
+  originState            String?
+  originLat              Float
+  originLng              Float
+  
+  destinationCity        String
+  destinationState       String?
+  destinationLat         Float
+  destinationLng         Float
+
+  currentLat             Float?
+  currentLng             Float?
+  
+  weightKg               Float           @default(2.5)
+  dimensions             String?         @default("30x20x15 cm")
+  packageType            String          @default("Parcel") // Parcel, Pallet, Document, Heavy Cargo
+  packageDescription     String?
+  specialInstructions    String?
+  
+  estimatedDelivery      DateTime
+  actualDelivery         DateTime?
+  
+  assignedVehicleId      String?
+  assignedVehicle        Vehicle?        @relation(fields: [assignedVehicleId], references: [id])
+  
+  events                 TrackingEvent[]
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+
+  @@index([trackingNumber])
+  @@index([currentStatus])
+}
+
+model TrackingEvent {
+  id             String    @id @default(cuid())
+  shipmentId     String
+  shipment       Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  status         String
+  title          String
+  description    String
+  location       String
+  latitude       Float?
+  longitude      Float?
+  source         String    @default("CARRIER_SCAN") // CARRIER_SCAN, TELEMATICS_GPS, MANUAL_DISPATCH, SYSTEM_DEMO
+  eventTimestamp DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+
+  @@index([shipmentId])
+}
+
+model Vehicle {
+  id                 String     @id @default(cuid())
+  registrationNumber String     @unique
+  vehicleType        String     // Semi-Truck, Electric Van, Cargo Plane, Delivery Van
+  model              String
+  year               Int        @default(2023)
+  status             String     @default("ACTIVE") // ACTIVE, AVAILABLE, MAINTENANCE, IN_TRANSIT, RETIRED
+  fuelLevelPercent   Float      @default(85)
+  batteryPercent     Float?
+  lastLatitude       Float
+  lastLongitude      Float
+  lastLocationUpdate DateTime   @default(now())
+  telematicsProvider String     @default("DEMO_TELEMATICS") // SAMSARA, GEOTAB, DEMO_TELEMATICS
+  
+  driverId           String?    @unique
+  driver             Driver?    @relation(fields: [driverId], references: [id])
+  
+  shipments          Shipment[]
+  routes             Route[]
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+}
+
+model Driver {
+  id                 String    @id @default(cuid())
+  name               String
+  email              String    @unique
+  phone              String
+  licenseNumber      String
+  status             String    @default("AVAILABLE") // AVAILABLE, ON_DELIVERY, OFF_DUTY, SUSPENDED
+  rating             Float     @default(4.9)
+  deliveriesCompleted Int      @default(120)
+  vehicle            Vehicle?
+  routes             Route[]
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model Route {
+  id                String      @id @default(cuid())
+  routeNumber       String      @unique
+  vehicleId         String?
+  vehicle           Vehicle?    @relation(fields: [vehicleId], references: [id])
+  driverId          String?
+  driver            Driver?     @relation(fields: [driverId], references: [id])
+  startLocation     String
+  destination       String
+  startLat          Float
+  startLng          Float
+  destLat           Float
+  destLng           Float
+  totalDistanceKm   Float
+  estimatedDuration String      // e.g. "4 hrs 25 mins"
+  status            String      @default("PLANNED") // PLANNED, IN_PROGRESS, COMPLETED, CANCELLED
+  optimizationType  String      @default("SHORTEST_TIME") // SHORTEST_TIME, FUEL_EFFICIENT, MULTI_STOP_TSP
+  stops             RouteStop[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model RouteStop {
+  id             String    @id @default(cuid())
+  routeId        String
+  route          Route     @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  address        String
+  latitude       Float
+  longitude      Float
+  stopOrder      Int
+  deliveryStatus String    @default("PENDING") // PENDING, ARRIVED, COMPLETED, SKIPPED
+  estimatedArrival DateTime?
+  notes          String?
+
+  @@index([routeId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   // DELAY, PICKUP, DELIVERED, EXCEPTION, VEHICLE_ASSIGNMENT, SYSTEM
+  isRead    Boolean  @default(false)
+  linkUrl   String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action       String   // CREATE_SHIPMENT, UPDATE_STATUS, REASSIGN_DRIVER, CANCEL_ROUTE
+  resourceType String   // Shipment, Vehicle, Route, Driver
+  resourceId   String
+  details      String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+}
+
